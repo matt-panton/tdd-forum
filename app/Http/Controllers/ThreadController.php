@@ -22,13 +22,11 @@ class ThreadController extends Controller
      */
     public function index(Channel $channel, ThreadFilters $filters)
     {
-        $threads = $channel->exists
-            ? $channel->threads()->latest()
-            : Thread::latest();
+        $threads = $this->getThreads($channel, $filters);
 
-        $threads = $threads->filter($filters)->get();
-        
-        return view('thread.index', compact('threads'));
+        return request()->wantsJson()
+            ? $threads
+            : view('thread.index', compact('threads'));
     }
 
     /**
@@ -67,9 +65,9 @@ class ThreadController extends Controller
      */
     public function show(Channel $channel, Thread $thread)
     {
-        $thread->load('replies', 'replies.user');
+        $replies = $thread->replies()->paginate(10);
 
-        return view('thread.show', compact('thread'));
+        return view('thread.show', compact('thread', 'replies'));
     }
 
     /**
@@ -101,8 +99,25 @@ class ThreadController extends Controller
      * @param  \App\Thread  $thread
      * @return \Illuminate\Http\Response
      */
-    public function destroy(Thread $thread)
+    public function destroy(Channel $channel, Thread $thread)
     {
-        //
+        $this->authorize('destroy', $thread);
+
+        $thread->delete();
+
+        return request()->wantsJson()
+            ? response()->json(null, 200)
+            : redirect()->route('user.show', auth()->user());
+    }
+
+    protected function getThreads(Channel $channel, ThreadFilters $filters)
+    {
+        $threads = Thread::latest();
+
+        if ($channel->exists) {
+            $threads = $threads->where('channel_id', $channel->id);
+        }
+
+        return $threads->filter($filters)->get();
     }
 }

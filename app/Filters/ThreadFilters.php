@@ -8,6 +8,7 @@ class ThreadFilters extends Filters
 {
     protected $filters = [
         'by',
+        'popular',
     ];
 
     /**
@@ -23,5 +24,17 @@ class ThreadFilters extends Filters
         }
 
         return $this->builder->where('user_id', $user->id);
+    }
+
+    /**
+     * Order threads based on number of replies.
+     * 
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    protected function popular()
+    {
+        $this->builder->getQuery()->orders = [];
+
+        return $this->builder->orderBy('replies_count', 'desc');
     }
 }

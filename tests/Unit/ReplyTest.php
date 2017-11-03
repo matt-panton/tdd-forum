@@ -18,4 +18,16 @@ class ReplyTest extends TestCase
 
         $this->assertInstanceOf(User::class, $reply->user);
     }
+
+    /** @test */
+    public function a_reply_can_be_favourited()
+    {
+        $user = create('App\User');
+        $reply = create('App\Reply');
+
+        $reply->favourite($user);
+        
+        $this->assertCount(1, $reply->favourites);
+        $this->assertEquals($user->id, $reply->favourites()->first()->user->id);
+    }
 }
