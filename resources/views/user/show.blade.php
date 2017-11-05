@@ -11,26 +11,12 @@
                 </h1>
             </div>
 
-            @foreach ($user->threads as $thread)
-                <div class="panel panel-default">
-                    <div class="panel-heading">
-                        <div class="level">
-                            <span class="flex">
-                                <a href="{{ route('user.show', $thread->user) }}">{{ $thread->user->name }}</a> posted:
-                                <a href="{{ $thread->path() }}">{{ $thread->title }}</a>
-                            </span>
-
-                            <span>{{ $thread->created_at->diffForHumans() }}</span>
-                        </div>
-                    </div>
-
-                    <div class="panel-body">
-                        {{ $thread->body }}
-                    </div>
-                </div>
+            @foreach ($user->activity as $date => $activities)
+                <h3 class="page-header">{{ $date }}</h3>
+                @foreach ($activities as $activity)
+                    @include("user.activities._{$activity->type}")
+                @endforeach
             @endforeach 
-
-            {{ $user->threads->links() }}
         </div>
     </div>
 </div>

@@ -2,8 +2,9 @@
 
 namespace Tests\Feature;
 
-use Tests\TestCase;
+use App\Activity;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
 
 class CreateThreadsTest extends TestCase
 {
@@ -74,16 +75,7 @@ class CreateThreadsTest extends TestCase
 
         $this->assertDatabaseMissing('threads', ['id' => $thread->id]);
         $this->assertDatabaseMissing('replies', ['id' => $reply->id]);
-    }
-
-    /** @test */
-    public function guests_cannot_delete_threads()
-    {
-        $thread = create('App\Thread');
-        
-        $this->withExceptionHandling()
-            ->delete($thread->path())
-            ->assertRedirect(route('login'));
+        $this->assertCount(0, Activity::all());
     }
 
     /** @test */

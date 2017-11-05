@@ -28,6 +28,8 @@
         @include('partials._nav')
 
         @yield('content')
+
+        <flash message="{{ session('flash') }}"></flash>
     </div>
 
     <!-- Scripts -->

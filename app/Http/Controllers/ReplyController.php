@@ -21,6 +21,7 @@ class ReplyController extends Controller
             'user_id' => $request->user()->id,
         ]);
 
-        return redirect()->back();
+        return redirect()->back()
+            ->with('flash', 'Your reply has been left.');
     }
 }

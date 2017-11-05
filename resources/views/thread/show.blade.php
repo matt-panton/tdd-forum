@@ -50,7 +50,7 @@
         <div class="col-md-4">
             <div class="panel panel-default">
                 <div class="panel-body">
-                    <p>This thread was published {{ $thread->created_at->diffForHumans() }} by <a href="#">{{ $thread->user->name }}</a> and currently has {{ $thread->replies_count }} {{ str_plural('comment', $thread->replies_count) }}.</p>
+                    <p>This thread was published {{ $thread->created_at->diffForHumans() }} by <a href="{{ route('user.show', $thread->user) }}">{{ $thread->user->name }}</a> and currently has {{ $thread->replies_count }} {{ str_plural('comment', $thread->replies_count) }}.</p>
                 </div>
             </div>
         </div>
