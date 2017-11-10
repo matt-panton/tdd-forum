@@ -26,6 +26,11 @@ class Thread extends Model
         });
     }
 
+    public function scopeFilter($query, $filters)
+    {
+        return $filters->apply($query);
+    }
+
     public function path()
     {
         return route('thread.show', [$this->channel, $this]);
@@ -36,9 +41,27 @@ class Thread extends Model
         return $this->replies()->create($data);
     }
 
-    public function scopeFilter($query, $filters)
+    public function subscribe($user = null)
     {
-        return $filters->apply($query);
+        $user = $user ?: auth()->user();
+
+        $this->subscriptions()->create([
+            'user_id' => $user->id,
+        ]);
+    }
+
+    public function unsubscribe($user = null)
+    {
+        $user = $user ?: auth()->user();
+
+        $this->subscriptions()->where([
+            'user_id' => $user->id,
+        ])->delete();
+    }
+
+    public function subscriptions()
+    {
+        return $this->hasMany(ThreadSubscription::class);
     }
 
     public function user()
