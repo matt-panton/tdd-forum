@@ -13,6 +13,15 @@
     <!-- Styles -->
     <link href="{{ asset('css/app.css') }}" rel="stylesheet">
 
+    <script>
+
+        window.App = {!! json_encode([
+            'csrfToken' => csrf_token(),
+            'user' => Auth::user(),
+            'signedIn' => Auth::check()
+        ]) !!};
+    </script>
+
     <style>
         .level {
             display: flex;
@@ -20,6 +29,9 @@
         }
         .flex {
             flex: 1;
+        }
+        [v-cloak] {
+            display: none;
         }
     </style>
 </head>

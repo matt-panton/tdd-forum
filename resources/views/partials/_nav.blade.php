@@ -26,6 +26,7 @@
                     <ul class="dropdown-menu">
                         <li><a href="{{ route('thread.index') }}">All Threads</a></li>
                         <li><a href="{{ route('thread.index') }}?popular=1">Popular Threads</a></li>
+                        <li><a href="{{ route('thread.index') }}?unanswered=1">Unanswered Threads</a></li>
                         @auth()
                             <li><a href="{{ route('thread.index') }}?by={{ urlencode(auth()->user()->name) }}">My Threads</a></li>
                         @endauth

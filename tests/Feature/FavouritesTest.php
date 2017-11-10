@@ -45,4 +45,28 @@ class FavouritesTest extends TestCase
 
         $this->assertCount(1, $reply->favourites);
     }
+
+    /** @test */
+    public function an_authenticated_user_can_unfavourite_a_reply()
+    {
+        $this->signIn();
+        $reply = create('App\Reply');
+
+        $reply->favourite();
+
+        $this->json('DELETE', route('reply.favourite', $reply))
+            ->assertStatus(200);
+
+        $this->assertCount(0, $reply->favourites);
+    }
+
+    /** @test */
+    public function an_unauthenticated_user_cannot_unfavourite_a_reply()
+    {
+        $favourite = create('App\Favourite');
+
+        $this->withExceptionHandling()
+            ->json('DELETE', route('reply.favourite', $favourite->favouriteable))
+            ->assertStatus(401);
+    }
 }

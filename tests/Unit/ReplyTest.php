@@ -30,4 +30,16 @@ class ReplyTest extends TestCase
         $this->assertCount(1, $reply->favourites);
         $this->assertEquals($user->id, $reply->favourites()->first()->user->id);
     }
+
+    /** @test */
+    public function a_reply_can_make_a_string_path()
+    {
+        $thread = create('App\Thread');
+        $reply = create('App\Reply', ['thread_id' => $thread->id]);
+
+        $this->assertEquals(
+            url("threads/{$thread->channel->slug}/{$thread->id}") . "#reply-{$reply->id}",
+            $reply->path()
+        );
+    }
 }

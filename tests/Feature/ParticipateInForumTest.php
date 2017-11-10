@@ -28,8 +28,8 @@ class ParticipateInForumTest extends TestCase
 
         $this->post($thread->path().'/replies', $reply->toArray());
 
-        $this->get($thread->path())
-            ->assertSee($reply['body']);
+        $this->assertDatabaseHas('replies', ['body' => $reply->body]);
+        $this->assertEquals(1, $thread->fresh()->replies_count);
     }
 
     /** @test */
@@ -43,6 +43,61 @@ class ParticipateInForumTest extends TestCase
         $this->withExceptionHandling()
             ->post($thread->path().'/replies', $reply->toArray())
             ->assertSessionHasErrors('body');
+    }
 
+    /** @test */
+    public function unauthorized_users_cannot_delete_replies()
+    {
+        $this->withExceptionHandling();
+        $reply = create('App\Reply');
+
+        $this->delete(route('reply.destroy', $reply))
+            ->assertRedirect(route('login'));
+        
+        $this->signIn()
+            ->delete(route('reply.destroy', $reply))
+            ->assertStatus(403);
+    }
+
+    /** @test */
+    public function authorized_users_can_delete_replies()
+    {
+        $this->signIn();
+        $reply = create('App\Reply', ['user_id' => auth()->id()]);
+
+        $this->json('DELETE', route('reply.destroy', $reply))
+            ->assertStatus(200);
+
+        $this->assertDatabaseMissing('replies', ['id' => $reply->id]);
+        $this->assertEquals(0, $reply->thread->fresh()->replies_count);
+    }
+
+    /** @test */
+    public function unauthorized_users_cannot_update_replies()
+    {
+        $this->withExceptionHandling();
+        $reply = create('App\Reply');
+
+        $this->json('PATCH', route('reply.update', $reply))
+            ->assertStatus(401);
+
+        $this->signIn()
+            ->json('PATCH', route('reply.update', $reply), ['body' => 'You have been changed.'])
+            ->assertStatus(403);
+    }
+
+    /** @test */
+    public function authorized_users_can_edit_replies()
+    {
+        $this->signIn();
+        $reply = create('App\Reply', ['user_id' => auth()->id()]);
+
+        $this->json('PATCH', route('reply.update', $reply), ['body' => 'You have been changed.'])
+            ->assertStatus(200);
+
+        $this->assertDatabaseHas('replies', [
+            'id' => $reply->id,
+            'body' => 'You have been changed.',
+        ]);
     }
 }

@@ -33,15 +33,6 @@ class ReadThreadsTest extends TestCase
     }
 
     /** @test */
-    public function a_user_can_read_replies_that_are_associated_with_a_thread()
-    {
-        $reply = create('App\Reply', ['thread_id' => $this->thread->id]);
-
-        $this->get($this->thread->path())
-            ->assertSee($reply->body);
-    }
-
-    /** @test */
     public function a_user_can_filter_threads_according_to_a_tag()
     {
         $channel = create('App\Channel');
@@ -89,6 +80,29 @@ class ReadThreadsTest extends TestCase
         $response = $this->getJson(route('thread.index').'?popular=1')->json();
 
         $this->assertEquals([3, 2, 0],array_column($response, 'replies_count'));
+    }
 
+    /** @test */
+    public function a_user_can_filter_threads_by_those_that_are_unanswered()
+    {
+        $threadWithNoReplies = $this->thread;
+        $threadWithReply = create('App\Thread');
+        create('App\Reply', ['thread_id' => $threadWithReply->id]);
+
+        $response = $this->getJson(route('thread.index').'?unanswered=1')->json();
+
+        $this->assertCount(1, $response);
+        $this->assertEquals($threadWithNoReplies->body, $response[0]['body']);
+    }
+
+    /** @test */
+    public function a_user_can_request_replies_for_a_given_thread()
+    {
+        $thread = create('App\Thread');
+        $replies = create('App\Reply', ['thread_id' => $thread->id], 3);
+
+        $response = $this->json('GET', route('reply.index', [$thread->channel, $thread]))->json();
+
+        $this->assertCount(3, $response['data']);
     }
 }

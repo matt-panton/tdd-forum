@@ -18,4 +18,15 @@ class FavouriteController extends Controller
 
         return redirect()->back();
     }
+
+    public function destroy(Reply $reply)
+    {
+        $reply->unfavourite();
+
+        if (request()->wantsJson()) {
+            return response()->json(null, 200);
+        }
+        
+        return redirect()->back();
+    }
 }
