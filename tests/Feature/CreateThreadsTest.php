@@ -23,6 +23,19 @@ class CreateThreadsTest extends TestCase
     }
 
     /** @test */
+    public function new_users_must_first_confirm_their_email_address_before_creating_threads()
+    {
+        $user = factory('App\User')->states('unconfirmed')->create();
+        $this->signIn($user);
+
+        $thread = factory('App\Thread')->make();
+
+        return $this->post(route('thread.store'), $thread->toArray())
+            ->assertRedirect(route('thread.index'))
+            ->assertSessionHas('flash');
+    }
+
+    /** @test */
     public function an_authenticated_user_can_create_new_forum_threads()
     {
         $this->signIn();
@@ -48,6 +61,18 @@ class CreateThreadsTest extends TestCase
     {
         $this->publishThread(['body' => null])
             ->assertSessionHasErrors('body');
+    }
+
+    /** @test */
+    public function a_thread_creates_a_unique_slug()
+    {
+        $this->signIn();
+
+        $thread = create('App\Thread', ['title' => 'Foo Title', 'slug' => 'foo-title']);
+
+        $this->post(route('thread.store'), $thread->toArray());
+
+        $this->assertDatabaseHas('threads', ['slug' => 'foo-title-2']);
     }
 
     /** @test */

@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Channel;
+use App\Repositories\Trending;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Schema;
@@ -19,7 +20,13 @@ class AppServiceProvider extends ServiceProvider
     {
         Schema::defaultStringLength(191);
 
-        View::composer('*', function($view) {
+        View::composer('thread._trending', function ($view) {
+            $view->with([
+                'trendingThreads' => resolve(Trending::class)->get()
+            ]);
+        });
+
+        View::composer('*', function ($view) {
             $channels = Cache::rememberForever('channels.all', function () {
                 return Channel::all();
             });

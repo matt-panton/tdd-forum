@@ -2,6 +2,8 @@
 
 namespace App\Http\Requests;
 
+use App\Rules\SpamFree;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Foundation\Http\FormRequest;
 
 class ReplyRequest extends FormRequest
@@ -13,6 +15,14 @@ class ReplyRequest extends FormRequest
      */
     public function authorize()
     {
+        if (app()->environment() === 'local') {
+            return true;
+        }
+        
+        if ($this->method() === 'POST') {
+            return Gate::allows('store', \App\Reply::class);
+        }
+
         return true;
     }
 
@@ -24,7 +34,7 @@ class ReplyRequest extends FormRequest
     public function rules()
     {
         return [
-            'body' => 'required'
+            'body' => ['required', new SpamFree]
         ];
     }
 }

@@ -15,4 +15,4 @@ try {
 import Vue from 'vue'
 
 window.events = new Vue()
-window.flash = (message) => window.events.$emit('flash', message)
+window.flash = (message, level = 'success') => window.events.$emit('flash', {message, level})

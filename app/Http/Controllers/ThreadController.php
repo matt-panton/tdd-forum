@@ -4,20 +4,28 @@ namespace App\Http\Controllers;
 
 use App\Thread;
 use App\Channel;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use App\Filters\ThreadFilters;
+use App\Repositories\Trending;
 use App\Http\Requests\ThreadRequest;
 
 class ThreadController extends Controller
 {
+    /**
+     * Create a new ThreadController instance.
+     */
     public function __construct ()
     {
         $this->middleware('auth')->except(['index', 'show']);
+        $this->middleware('must-be-confirmed')->only('store');
     }
 
     /**
      * Display a listing of the resource.
      *
+     * @param \App\Channel               $channel
+     * @param \App\Filters\ThreadFilter  $filters
      * @return \Illuminate\Http\Response
      */
     public function index(Channel $channel, ThreadFilters $filters)
@@ -42,7 +50,7 @@ class ThreadController extends Controller
     /**
      * Store a newly created resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param  \App\Http\Requests\ThreadRequest  $request
      * @return \Illuminate\Http\Response
      */
     public function store(ThreadRequest $request)
@@ -52,6 +60,7 @@ class ThreadController extends Controller
             'channel_id' => $request->channel_id,
             'title' => $request->title,
             'body' => $request->body,
+            'slug' => $request->title,
         ]);
 
         return redirect($thread->path())
@@ -61,11 +70,21 @@ class ThreadController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param  \App\Thread  $thread
+     * @param  \App\Channel  $channel
+     * @param  \App\Thread   $thread
      * @return \Illuminate\Http\Response
      */
-    public function show(Channel $channel, Thread $thread)
+    public function show(Channel $channel, Thread $thread, Trending $trending)
     {
+        $thread->append('is_subscribed_to');
+
+        if (auth()->check()) {
+            auth()->user()->read($thread);
+        }
+
+        $trending->increment($thread);
+        $thread->increment('visits');
+
         return view('thread.show', compact('thread'));
     }
 
@@ -95,7 +114,8 @@ class ThreadController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param  \App\Thread  $thread
+     * @param  \App\Channel  $channel
+     * @param  \App\Thread   $thread
      * @return \Illuminate\Http\Response
      */
     public function destroy(Channel $channel, Thread $thread)
@@ -109,6 +129,13 @@ class ThreadController extends Controller
             : redirect()->route('user.show', auth()->user());
     }
 
+    /**
+     * Get collection of filtered threads.
+     * 
+     * @param  App\Channel                $channel
+     * @param  App\Filters\ThreadFilters  $filters
+     * @return Illuminate\Database\Eloquent\Collection
+     */
     protected function getThreads(Channel $channel, ThreadFilters $filters)
     {
         $threads = Thread::latest();
@@ -117,6 +144,6 @@ class ThreadController extends Controller
             $threads = $threads->where('channel_id', $channel->id);
         }
 
-        return $threads->filter($filters)->get();
+        return $threads->filter($filters)->paginate(5);
     }
 }

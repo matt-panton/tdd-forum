@@ -9,50 +9,70 @@ use App\Http\Requests\ReplyRequest;
 
 class ReplyController extends Controller
 {
+    /**
+     * Create a new ReplyController instance.
+     */
     public function __construct ()
     {
         $this->middleware('auth')->except('index');
     }
 
-    public function index($channel, Thread $thread)
+    /**
+     * Get a list of replies for given thread.
+     * 
+     * @param  App\Channel  $channel
+     * @param  App\Thread   $thread
+     * @return Illuminate\Http\Response
+     */
+    public function index(Channel $channel, Thread $thread)
     {
         return $thread->replies()->paginate(20);
     }
 
-    public function store($channel, Thread $thread, ReplyRequest $request)
+    /**
+     * Store a new reply in the database.
+     * 
+     * @param  App\Channel  $channel
+     * @param  App\Thread   $thread 
+     * @param  App\Http\Requests\ReplyRequest  $request
+     * @return App\Reply
+     */
+    public function store(Channel $channel, Thread $thread, ReplyRequest $request)
     {
-        $reply = $thread->addReply([
+        return $thread->addReply([
             'body' => $request->body,
             'user_id' => $request->user()->id,
-        ]);
-
-        if ($request->wantsJson()) {
-            return $reply->load('user');
-        }
-
-        return redirect()->back()
-            ->with('flash', 'Your reply has been left.');
+        ])->load('user');
     }
 
-    public function update(Reply $reply)
+    /**
+     * Persis updates to a reply.
+     * 
+     * @param  App\Reply  $reply
+     * @param  App\Http\Requests\ReplyRequest  $request
+     * @return Illuminate\Http\Response
+     */
+    public function update(Reply $reply, ReplyRequest $request)
     {
         $this->authorize('update', $reply);
         
-        $reply->update(request()->only('body'));
+        $reply->update($request->only('body'));
 
-        return response()->json(null, 200);
+        return response()->json($reply->fresh(), 200);
     }
 
+    /**
+     * Delete a reply.
+     * 
+     * @param  App\Reply  $reply
+     * @return Illuminate\Http\Response
+     */
     public function destroy(Reply $reply)
     {
         $this->authorize('destroy', $reply);
 
         $reply->delete();
 
-        if (request()->wantsJson()) {
-            return response()->json(null, 200);
-        }
-
-        return redirect()->back();
+        return response()->json(null, 200);
     }
 }

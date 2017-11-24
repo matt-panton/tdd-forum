@@ -19,7 +19,15 @@ $factory->define(App\User::class, function (Faker $faker) {
     return [
         'name' => $faker->name,
         'email' => $faker->unique()->safeEmail,
+        'confirmed' => true,
+        'confirmation_token' => null,
         'password' => $password ?: $password = bcrypt('secret'),
         'remember_token' => str_random(10),
+    ];
+});
+
+$factory->state(App\User::class, 'unconfirmed', function () {
+    return [
+        'confirmed' => false,
     ];
 });

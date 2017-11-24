@@ -19,4 +19,15 @@ class ReplyPolicy
     {
         return $user->owns($reply);
     }
+
+    public function store(User $user)
+    {
+        $lastReply = $user->fresh()->lastReply;
+
+        if (is_null($lastReply)) {
+            return true;
+        }
+
+        return !$lastReply->wasJustPublished();
+    }
 }

@@ -13,25 +13,25 @@
             </div>
         </div>
 
-        <div class="panel-body">
-            <div v-if="editing">
-                <textarea class="form-control" rows="5" v-model="reply.body"></textarea>
+        <form @submit.prevent="save()">
+            <div class="panel-body">
+                <div v-if="editing">
+                    <textarea class="form-control" rows="5" v-model="reply.body" required></textarea>
+                </div>
+                <div v-else v-html="reply.formatted_body"></div>
             </div>
-            <div v-else>
-                {{ reply.body }}
+            
+            <div class="panel-footer" v-if="canUpdate()">
+                <div class="btn-group" v-if="editing">
+                    <button type="button" class="btn btn-default btn-xs" @click="resetEditing()">Cancel</button>
+                    <button type="submit" class="btn btn-success btn-xs" :disabled="saving">{{ saving ? 'Saving' : 'Save' }}</button>
+                </div>
+                <div class="btn-group" v-else>
+                    <button type="button" class="btn btn-default btn-xs" @click="startEditing()">Edit</button>
+                    <button type="button" class="btn btn-danger btn-xs" @click="destroy()">Delete</button>
+                </div>
             </div>
-        </div>
-
-        <div class="panel-footer" v-if="canUpdate()">
-            <div class="btn-group" v-if="editing">
-                <button type="button" class="btn btn-default btn-xs" @click="resetEditing()">Cancel</button>
-                <button type="button" class="btn btn-success btn-xs" @click="save()">Save</button>
-            </div>
-            <div class="btn-group" v-else>
-                <button type="button" class="btn btn-default btn-xs" @click="startEditing()">Edit</button>
-                <button type="button" class="btn btn-danger btn-xs" @click="destroy()">Delete</button>
-            </div>
-        </div>
+        </form>
     </div>
 </template>
 
@@ -42,6 +42,7 @@ import Favourite from './Favourite'
 export default {
     data() {
         return {
+            saving: false,
             editing: false,
             reply: this.data
         }
@@ -60,8 +61,18 @@ export default {
             this.editing = false
         },
         save(){
+            this.saving = true
             axios.patch(`/replies/${this.reply.id}`, {body: this.reply.body})
-            this.editing = false
+                .then(({data}) => {
+                    this.reply.body = data.body
+                    this.reply.formatted_body = data.formatted_body
+                    flash('Your reply has been updated.')
+                    this.stopEditing()
+                })
+                .catch(error => {
+                    flash(error.response.data.message, 'danger')
+                    this.stopEditing()
+                })
         },
         destroy(){
             axios.delete(`/replies/${this.reply.id}`)
@@ -70,6 +81,11 @@ export default {
         },
         canUpdate() {
             return this.authorize(user => this.reply.user_id === user.id)
+        },
+        stopEditing()
+        {
+            this.saving = false
+            this.editing = false
         }
     },
 

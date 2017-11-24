@@ -19,12 +19,12 @@
                             </select>
                         </div>
 
-                        <div class="form-group">
+                        <div class="form-group {{ $errors->has('title') ? 'has-error' : '' }}">
                             <label for="title" class="control-label">Title</label>
                             <input type="text" name="title" id="title" class="form-control" value="{{ old('title') }}">
                             {!! $errors->first('title', '<span class="help-block">:message</span>') !!}
                         </div>
-                        <div class="form-group">
+                        <div class="form-group {{ $errors->has('body') ? 'has-error' : '' }}">
                             <label for="body" class="control-label">Body</label>
                             <textarea name="body" id="body" rows="5" class="form-control">{{ old('body') }}</textarea>
                             {!! $errors->first('body', '<span class="help-block">:message</span>') !!}

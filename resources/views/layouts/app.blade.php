@@ -11,6 +11,7 @@
     <title>{{ config('app.name', 'Laravel') }}</title>
 
     <!-- Styles -->
+    @stack('css')
     <link href="{{ asset('css/app.css') }}" rel="stylesheet">
 
     <script>
@@ -23,6 +24,7 @@
     </script>
 
     <style>
+        .mr-1 {margin-right: 1em;}
         .level {
             display: flex;
             align-items: center;

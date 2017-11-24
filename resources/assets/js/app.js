@@ -10,6 +10,8 @@ Vue.prototype.authorize = (handler) => {
 
 import Flash from './components/Flash.vue'
 import ThreadView from './pages/Thread.vue'
+import UserNotifications from './components/UserNotifications.vue'
+import AvatarForm from './components/AvatarForm.vue'
 
 const app = new Vue({
     data: window.App,
@@ -18,6 +20,8 @@ const app = new Vue({
 
     components: {
         Flash,
-        ThreadView
+        ThreadView,
+        UserNotifications,
+        AvatarForm
     }
 })

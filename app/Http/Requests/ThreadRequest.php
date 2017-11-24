@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Rules\SpamFree;
 use Illuminate\Foundation\Http\FormRequest;
 
 class ThreadRequest extends FormRequest
@@ -24,9 +25,9 @@ class ThreadRequest extends FormRequest
     public function rules()
     {
         return [
-            'title' => 'required',
-            'body' => 'required',
-            'channel_id' => 'required|exists:channels,id',
+            'title' => ['required', new SpamFree],
+            'body' => ['required', new SpamFree],
+            'channel_id' => ['required', 'exists:channels,id'],
         ];
     }
 }

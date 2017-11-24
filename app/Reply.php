@@ -2,6 +2,7 @@
 
 namespace App;
 
+use Carbon\Carbon;
 use App\Traits\Favouriteable;
 use App\Traits\RecordsActivity;
 use Illuminate\Database\Eloquent\Model;
@@ -12,7 +13,11 @@ class Reply extends Model
     
     protected $guarded = [];
 
-    protected $appends = ['favourites_count', 'is_favourited'];
+    protected $appends = [
+        'favourites_count',
+        'is_favourited',
+        'formatted_body',
+    ];
 
     protected $with = ['user', 'favourites'];
 
@@ -34,9 +39,32 @@ class Reply extends Model
         return $this->favourites->count();
     }
 
+    public function getFormattedBodyAttribute()
+    {
+        return preg_replace_callback('/\@([a-zA-Z0-9\-\_]+)/', function ($matches) {
+            return sprintf(
+                '<a href="%s">%s</a>',
+                route('user.show', $matches[1]),
+                $matches[0]
+            );
+        }, e($this->body));
+    }
+
     public function path()
     {
         return $this->thread->path() . "#reply-{$this->id}";
+    }
+
+    public function mentionedUsers()
+    {
+        preg_match_all('/\@([a-zA-Z0-9\-\_]+)/', $this->body, $matches);
+
+        return $matches[1];
+    }
+
+    public function wasJustPublished()
+    {
+        return $this->created_at->gt(Carbon::now()->subMinute());
     }
 
     public function thread()

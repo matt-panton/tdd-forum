@@ -13,22 +13,42 @@
 
 
 <script>
+import 'jquery.caret'
+import 'at.js'
+
 export default {
     data() {
         return {
-            body: ''        }
+            body: ''
+        }
     },
 
     methods: {
         addReply() {
-            axios.post(`${location.pathname}/replies`, {body: this.body}).then(response => {
-                this.body = ''
-                
+            axios.post(`${location.pathname}/replies`, {body: this.body})
+            .then(response => {
+                this.body = ''    
                 flash('Your reply has been posted.')
-
                 this.$emit('created', response.data)
             })
+            .catch(error => {
+                flash(error.response.data.message, 'danger')
+            });
         }
+    },
+
+    mounted() {
+        $('#body').atwho({
+            at: '@',
+            delay: 700,
+            callbacks: {
+                remoteFilter(query, callback) {
+                    axios.get('/api/users', {params: {name: query}}).then(response => {
+                        callback(response.data);
+                    })
+                }
+            }
+        })
     }
 }
 </script>

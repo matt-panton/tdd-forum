@@ -3,6 +3,7 @@
 namespace App;
 
 use App\Traits\RecordsActivity;
+use App\Events\ThreadReceivedNewReply;
 use Illuminate\Database\Eloquent\Model;
 
 class Thread extends Model
@@ -26,6 +27,11 @@ class Thread extends Model
         });
     }
 
+    public function getRouteKeyName()
+    {
+        return 'slug';
+    }
+
     public function scopeFilter($query, $filters)
     {
         return $filters->apply($query);
@@ -38,7 +44,11 @@ class Thread extends Model
 
     public function addReply(array $data)
     {
-        return $this->replies()->create($data);
+        $reply = $this->replies()->create($data);
+
+        event(new ThreadReceivedNewReply($reply));
+
+        return $reply;
     }
 
     public function subscribe($user = null)
@@ -48,6 +58,8 @@ class Thread extends Model
         $this->subscriptions()->create([
             'user_id' => $user->id,
         ]);
+
+        return $this;
     }
 
     public function unsubscribe($user = null)
@@ -57,6 +69,40 @@ class Thread extends Model
         $this->subscriptions()->where([
             'user_id' => $user->id,
         ])->delete();
+
+        return $this;
+    }
+
+    public function userIsSubscribed(User $user)
+    {
+        return $this->subscriptions()
+            ->where('user_id', $user->id)
+            ->exists();
+    }
+
+    public function hasUpdatesFor($user = null)
+    {
+        $user = $user ?: auth()->user();
+
+        if (is_null($user)) return false;
+
+        return $this->updated_at > cache($user->visitedThreadCacheKey($this));
+    }
+
+    public function getIsSubscribedToAttribute()
+    {
+        return auth()->guest()
+            ? false :
+            $this->userIsSubscribed(auth()->user());
+    }
+
+    public function setSlugAttribute($value)
+    {
+        if (static::whereSlug($slug = str_slug($value))->exists()) {
+            $slug = $this->incrementSlug($slug);
+        }
+
+        $this->attributes['slug'] = $slug;
     }
 
     public function subscriptions()

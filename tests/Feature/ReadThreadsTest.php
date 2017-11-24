@@ -79,7 +79,7 @@ class ReadThreadsTest extends TestCase
 
         $response = $this->getJson(route('thread.index').'?popular=1')->json();
 
-        $this->assertEquals([3, 2, 0],array_column($response, 'replies_count'));
+        $this->assertEquals([3, 2, 0],array_column($response['data'], 'replies_count'));
     }
 
     /** @test */
@@ -91,8 +91,8 @@ class ReadThreadsTest extends TestCase
 
         $response = $this->getJson(route('thread.index').'?unanswered=1')->json();
 
-        $this->assertCount(1, $response);
-        $this->assertEquals($threadWithNoReplies->body, $response[0]['body']);
+        $this->assertCount(1, $response['data']);
+        $this->assertEquals($threadWithNoReplies->body, $response['data'][0]['body']);
     }
 
     /** @test */
@@ -104,5 +104,15 @@ class ReadThreadsTest extends TestCase
         $response = $this->json('GET', route('reply.index', [$thread->channel, $thread]))->json();
 
         $this->assertCount(3, $response['data']);
+    }
+
+    /** @test */
+    public function we_record_a_new_visit_each_time_the_thread_is_read()
+    {
+        $this->assertEquals(0, $this->thread->visits);
+
+        $this->get($this->thread->path());
+
+        $this->assertEquals(1, $this->thread->fresh()->visits);
     }
 }

@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use Carbon\Carbon;
 use Tests\TestCase;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
@@ -90,7 +91,10 @@ class ParticipateInForumTest extends TestCase
     public function authorized_users_can_edit_replies()
     {
         $this->signIn();
-        $reply = create('App\Reply', ['user_id' => auth()->id()]);
+        $reply = create('App\Reply', [
+            'user_id' => auth()->id(),
+            'created_at'  => Carbon::now()->subDay(),
+        ]);
 
         $this->json('PATCH', route('reply.update', $reply), ['body' => 'You have been changed.'])
             ->assertStatus(200);
@@ -99,5 +103,36 @@ class ParticipateInForumTest extends TestCase
             'id' => $reply->id,
             'body' => 'You have been changed.',
         ]);
+    }
+
+    /** @test */
+    public function replies_that_contain_span_may_not_be_created()
+    {
+        $this->signIn();
+
+        $thread = create('App\Thread');
+        $reply = make('App\Reply', [
+            'body' => 'Yahoo Customer Support'
+        ]);
+
+        $this->expectException(\Illuminate\Validation\ValidationException::class);
+
+        $this->post($thread->path().'/replies', $reply->toArray());
+    }
+
+    /** @test */
+    public function users_may_only_reply_a_maximum_of_once_per_minute()
+    {
+        $this->signIn();
+        $this->withExceptionHandling();
+        $thread = create('App\Thread');
+
+        $reply = make('App\Reply', ['body' => 'A simple reply.']);
+
+        $this->post($thread->path().'/replies', $reply->toArray())
+            ->assertStatus(200);        
+
+        $this->post($thread->path().'/replies', $reply->toArray())
+            ->assertStatus(403);
     }
 }
