@@ -17,7 +17,7 @@ $factory->define(App\User::class, function (Faker $faker) {
     static $password;
 
     return [
-        'name' => $faker->name,
+        'name' => $faker->userName,
         'email' => $faker->unique()->safeEmail,
         'confirmed' => true,
         'confirmation_token' => null,
@@ -29,5 +29,11 @@ $factory->define(App\User::class, function (Faker $faker) {
 $factory->state(App\User::class, 'unconfirmed', function () {
     return [
         'confirmed' => false,
+    ];
+});
+
+$factory->state(App\User::class, 'administrator', function () {
+    return [
+        'name' => 'matt_panton',
     ];
 });

@@ -20,7 +20,7 @@ class RegistrationTest extends TestCase
         
         event(new Registered($user = create('App\User')));
 
-        Mail::assertSent(ConfirmYourEmail::class);
+        Mail::assertQueued(ConfirmYourEmail::class);
     }
 
     /** @test */

@@ -44,6 +44,11 @@ class User extends Authenticatable
         );
     }
 
+    public function isAdmin()
+    {
+        return in_array($this->name, ['matt_panton']);
+    }
+
     /**
      * Determine whether user has favourited given model.
      * 

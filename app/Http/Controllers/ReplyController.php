@@ -26,7 +26,13 @@ class ReplyController extends Controller
      */
     public function index(Channel $channel, Thread $thread)
     {
-        return $thread->replies()->paginate(20);
+        $replies = $thread->replies()->paginate(20);
+
+        $replies->each(function ($reply) use ($thread) {
+            $reply->setRelation('thread', $thread);
+        });
+
+        return $replies;
     }
 
     /**
@@ -39,6 +45,10 @@ class ReplyController extends Controller
      */
     public function store(Channel $channel, Thread $thread, ReplyRequest $request)
     {
+        if ($thread->locked) {
+            return response('Thread is locked.', 422);
+        }
+
         return $thread->addReply([
             'body' => $request->body,
             'user_id' => $request->user()->id,

@@ -1,5 +1,5 @@
 <template>
-    <div class="panel panel-default" :id="`reply-${reply.id}`">
+    <div class="panel" :class="reply.is_best ? 'panel-success' : 'panel-default'" :id="`reply-${reply.id}`">
         <div class="panel-heading">
             <div class="level">
                 <h5 class="flex">
@@ -7,7 +7,7 @@
                      said {{ diffForHumans(reply.created_at) }}:
                  </h5>
                 
-                <div v-if="$root.signedIn">
+                <div v-if="signedIn">
                     <favourite :reply="reply"></favourite>
                 </div>
             </div>
@@ -21,14 +21,19 @@
                 <div v-else v-html="reply.formatted_body"></div>
             </div>
             
-            <div class="panel-footer" v-if="canUpdate()">
+            <div class="panel-footer" v-if="authorize('owns', reply) || authorize('owns', reply.thread)">
                 <div class="btn-group" v-if="editing">
                     <button type="button" class="btn btn-default btn-xs" @click="resetEditing()">Cancel</button>
                     <button type="submit" class="btn btn-success btn-xs" :disabled="saving">{{ saving ? 'Saving' : 'Save' }}</button>
                 </div>
                 <div class="btn-group" v-else>
-                    <button type="button" class="btn btn-default btn-xs" @click="startEditing()">Edit</button>
-                    <button type="button" class="btn btn-danger btn-xs" @click="destroy()">Delete</button>
+                    <template v-if="authorize('owns', reply)">
+                        <button type="button" class="btn btn-default btn-xs" @click="startEditing()">Edit</button>
+                        <button type="button" class="btn btn-danger btn-xs" @click="destroy()">Delete</button>
+                    </template>
+                    <template v-if="authorize('owns', reply.thread)">
+                        <button type="button" class="btn btn-info btn-xs" @click="markBestReply()" v-if="!reply.is_best">Best reply?</button>
+                    </template>
                 </div>
             </div>
         </form>
@@ -79,14 +84,22 @@ export default {
         
             this.$emit('deleted')
         },
-        canUpdate() {
-            return this.authorize(user => this.reply.user_id === user.id)
-        },
-        stopEditing()
-        {
+        stopEditing() {
             this.saving = false
             this.editing = false
+        },
+        markBestReply() {
+            axios.post(`/replies/${this.reply.id}/best`)
+
+            window.events.$emit('best-reply-selected', this.reply.id)
         }
+    },
+
+    created()
+    {
+        window.events.$on('best-reply-selected', bestReplyId => {
+            this.reply.is_best = bestReplyId === this.reply.id
+        })
     },
 
     components: {

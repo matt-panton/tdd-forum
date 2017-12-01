@@ -14,4 +14,9 @@ class ThreadPolicy
     {
         return $user->owns($thread);
     }
+
+    public function update(User $user, Thread $thread)
+    {
+        return $user->owns($thread);
+    }
 }

@@ -15,7 +15,6 @@
     <link href="{{ asset('css/app.css') }}" rel="stylesheet">
 
     <script>
-
         window.App = {!! json_encode([
             'csrfToken' => csrf_token(),
             'user' => Auth::user(),
@@ -35,7 +34,12 @@
         [v-cloak] {
             display: none;
         }
+        .ais-highlight > em {
+            background: yellow;
+            font-style: normal;
+        }
     </style>
+    @stack('head')
 </head>
 <body style="padding-bottom: 100px;">
     <div id="app">

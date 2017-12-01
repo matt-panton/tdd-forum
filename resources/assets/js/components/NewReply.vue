@@ -1,6 +1,6 @@
 <template>
     <div>
-        <div v-if="$root.signedIn">
+        <div v-if="signedIn">
             <div class="form-group">
                 <textarea name="body" id="body" class="form-control" placeholder="Have something to say?" rows="5" v-model="body"></textarea>
             </div>

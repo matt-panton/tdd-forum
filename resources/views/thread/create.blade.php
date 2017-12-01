@@ -29,6 +29,12 @@
                             <textarea name="body" id="body" rows="5" class="form-control">{{ old('body') }}</textarea>
                             {!! $errors->first('body', '<span class="help-block">:message</span>') !!}
                         </div>
+
+                        <div class="form-group {{ $errors->has('g-recaptcha-response') ? 'has-error' : '' }}">
+                            <div class="g-recaptcha" data-sitekey="6LfG7joUAAAAALXMj0H5KTjJBXNXpus5GYZBVuEI"></div>
+                            {!! $errors->first('g-recaptcha-response', '<span class="help-block">:message</span>') !!}
+                        </div>
+
                         <button type="submit" class="btn btn-primary">Publish</button>
                     </form>
                 </div>
@@ -37,3 +43,9 @@
     </div>
 </div>
 @endsection
+
+
+
+@push('head')
+<script src='https://www.google.com/recaptcha/api.js'></script>
+@endpush

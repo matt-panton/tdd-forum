@@ -1,15 +1,13 @@
 <template>
-    <div>
-        <button 
-            type="button"
-            class="btn"
-            :class="active ? 'btn-primary' : 'btn-default'"
-            @click="subscribe"
-            :disabled="processing"
-        >
-            {{ text }}
-        </button>
-    </div>
+    <button 
+        type="button"
+        class="btn"
+        :class="active ? 'btn-primary' : 'btn-default'"
+        @click="subscribe"
+        :disabled="processing"
+    >
+        {{ text }}
+    </button>
 </template>
 
 

@@ -2,17 +2,22 @@
 
 namespace App;
 
+use Laravel\Scout\Searchable;
 use App\Traits\RecordsActivity;
 use App\Events\ThreadReceivedNewReply;
 use Illuminate\Database\Eloquent\Model;
 
 class Thread extends Model
 {
-    use RecordsActivity;
+    use RecordsActivity, Searchable;
 
     protected $guarded = [];
 
     protected $with = ['channel'];
+
+    protected $casts = [
+        'locked' => 'boolean',
+    ];
 
     protected static function boot()
     {
@@ -25,11 +30,24 @@ class Thread extends Model
         static::deleting(function ($thread) {
             $thread->replies->each->delete();
         });
+
+        static::created(function ($thread) {
+            $thread->update(['slug' => $thread->title]);
+        });
     }
 
     public function getRouteKeyName()
     {
         return 'slug';
+    }
+
+    public function toSearchableArray()
+    {
+        $data = $this->toArray();
+
+        $data['path'] = $this->path();
+
+        return $data;
     }
 
     public function scopeFilter($query, $filters)
@@ -80,6 +98,15 @@ class Thread extends Model
             ->exists();
     }
 
+    public function markBestReply($reply = null)
+    {
+        $this->update([
+            'best_reply_id' => $reply ? $reply->id : null
+        ]);
+
+        return $this;
+    }
+
     public function hasUpdatesFor($user = null)
     {
         $user = $user ?: auth()->user();
@@ -98,8 +125,10 @@ class Thread extends Model
 
     public function setSlugAttribute($value)
     {
-        if (static::whereSlug($slug = str_slug($value))->exists()) {
-            $slug = $this->incrementSlug($slug);
+        $slug = str_slug($value);
+
+        if (static::whereSlug($slug)->exists()) {
+            $slug = sprintf('%s-%s', $slug, $this->id);
         }
 
         $this->attributes['slug'] = $slug;

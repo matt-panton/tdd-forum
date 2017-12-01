@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
-<thread-view inline-template :initial-replies-count="0">
+<thread-view inline-template :initial-thread="{{ $thread }}">
     <div class="container">
         <div class="row">
             <div class="col-md-8">
@@ -12,22 +12,31 @@
 
                             <span class="flex">
                                 <a href="{{ route('user.show', $thread->user) }}">{{ $thread->user->name }}</a> posted:
-                                {{ $thread->title }}
+                                <input type="text" class="form-control" v-model="editedThread.title" v-if="editing">
+                                <template v-else>@{{ thread.title }}</template>
                             </span>
-
-
-                            @can('destroy', $thread)
-                                <form action="{{ $thread->path() }}" method="POST">
-                                    {{ csrf_field() }}
-                                    {{ method_field('DELETE') }}
-                                    <button type="submit" class="btn btn-xs btn-danger">Delete</button>
-                                </form>
-                            @endcan
                         </div>
                     </div>
 
                     <div class="panel-body">
-                        {{ $thread->body }}
+                        <textarea v-if="editing" v-model="editedThread.body" class="form-control" rows="5"></textarea>
+                        <div v-else v-text="thread.body"></div>
+                    </div>
+
+                    <div class="panel-footer" v-if="authorize('owns', thread)">
+                        <div class="clearfix">
+                            <div class="btn-group">
+                                <div class="btn btn-xs btn-default" type="button" @click="editing = true" v-if="!editing">Edit</div>
+                                <div class="btn btn-xs btn-default" type="button" @click="editing = false" v-if="editing">Cancel</div>
+                                <div class="btn btn-xs btn-success" type="button" @click="save()" v-if="editing" :disabled="saving">@{{ saving ? 'Saving...' : 'Save' }}</div>
+                            </div>
+
+                            <form action="{{ $thread->path() }}" method="POST" v-if="authorize('owns', thread)" class="pull-right">
+                                {{ csrf_field() }}
+                                {{ method_field('DELETE') }}
+                                <button type="submit" class="btn btn-xs btn-danger">Delete</button>
+                            </form>
+                        </div>
                     </div>
                 </div>
 
@@ -38,11 +47,9 @@
                 <div class="panel panel-default">
                     <div class="panel-body">
                         <p>This thread was published {{ $thread->created_at->diffForHumans() }} by <a href="{{ route('user.show', $thread->user) }}">{{ $thread->user->name }}</a> and currently has <span v-text="repliesCount"></span> {{ str_plural('comment', $thread->replies_count) }}.</p>
-                        @auth
-                            <p>
-                                <subscribe-button :initial-active="{{ json_encode($thread->is_subscribed_to) }}"></subscribe-button>
-                            </p>
-                        @endauth
+                        <subscribe-button v-if="signedIn" :initial-active="{{ json_encode($thread->is_subscribed_to) }}"></subscribe-button>
+                    
+                        <button type="button" v-if="authorize('isAdmin')" class="btn btn-warning" @click="toggleLock()" v-text="thread.locked ? 'Unlock Thread' : 'Lock Thread'"></button>
                     </div>
                 </div>
             </div>

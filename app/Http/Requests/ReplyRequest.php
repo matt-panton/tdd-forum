@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Reply;
 use App\Rules\SpamFree;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Foundation\Http\FormRequest;
@@ -20,7 +21,7 @@ class ReplyRequest extends FormRequest
         }
         
         if ($this->method() === 'POST') {
-            return Gate::allows('store', \App\Reply::class);
+            return Gate::allows('store', Reply::class);
         }
 
         return true;

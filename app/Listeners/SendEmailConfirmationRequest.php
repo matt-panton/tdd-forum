@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Listener;
+namespace App\Listeners;
 
 use App\Mail\ConfirmYourEmail;
 use Illuminate\Support\Facades\Mail;
@@ -17,6 +17,6 @@ class SendEmailConfirmationRequest
     public function handle(Registered $event)
     {
         Mail::to($event->user)
-            ->send(new ConfirmYourEmail($event->user));
+            ->queue(new ConfirmYourEmail($event->user));
     }
 }

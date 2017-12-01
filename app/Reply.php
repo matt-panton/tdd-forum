@@ -17,6 +17,7 @@ class Reply extends Model
         'favourites_count',
         'is_favourited',
         'formatted_body',
+        'is_best',
     ];
 
     protected $with = ['user', 'favourites'];
@@ -31,6 +32,9 @@ class Reply extends Model
 
         static::deleted(function ($reply) {
             $reply->thread->decrement('replies_count');
+            if ($reply->is_best) {
+                $reply->thread->markBestReply(null);
+            }
         });
     }
 
@@ -60,6 +64,11 @@ class Reply extends Model
         preg_match_all('/\@([a-zA-Z0-9\-\_]+)/', $this->body, $matches);
 
         return $matches[1];
+    }
+
+    public function getIsBestAttribute()
+    {
+        return (int)$this->thread->best_reply_id === (int)$this->id;
     }
 
     public function wasJustPublished()
